@@ -1,15 +1,16 @@
 mantra_ai_dashboard/
-├── app.py
-├── config.py
-├── data_loader.py
-├── mantra_engine.py
-├── scoring_logic.py
-├── volume_analysis.py
-├── sector_rotation.py
-├── timing_triggers.py
-├── ui_sidebar.py
-├── ui_tabs.py
-├── utils.py
-├── constants.py
-├── requirements.txt
-└── README.md
+├── app.py                # Main Streamlit app entrypoint (UI, user flow)
+├── config.py             # All configuration, links, weights, constants
+├── data_loader.py        # Loads + cleans data from Google Sheet (handles all weirdness)
+├── scoring_logic.py      # Core: scoring/tags (BUY/WATCH/AVOID), ranking engine
+├── mantra_engine.py      # Brains: orchestrates all modules, builds final signals
+├── volume_analysis.py    # Helper: smart volume/rvol/surge detection
+├── sector_rotation.py    # Helper: sector momentum logic, sector ranking
+├── timing_triggers.py    # Helper: price, MA cross, timing rules
+├── ui_sidebar.py         # UI: all sidebar controls and filters (for Streamlit)
+├── ui_tabs.py            # UI: main dashboard tabs/views (for Streamlit)
+├── utils.py              # General helpers, cleaning, conversions, etc.
+├── constants.py          # Column names, sector lists, fixed mappings
+├── requirements.txt      # Python dependencies for the app
+├── README.md             # Project overview, setup, usage
+└── .env                  # (optional) Secret keys, config overrides (not committed)
