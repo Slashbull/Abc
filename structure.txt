@@ -1,0 +1,15 @@
+mantra_ai_dashboard/
+├── app.py
+├── config.py
+├── data_loader.py
+├── mantra_engine.py
+├── scoring_logic.py
+├── volume_analysis.py
+├── sector_rotation.py
+├── timing_triggers.py
+├── ui_sidebar.py
+├── ui_tabs.py
+├── utils.py
+├── constants.py
+├── requirements.txt
+└── README.md
