@@ -1,7 +1,7 @@
 # config.py
 
 # === Google Sheet Settings ===
-GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1XipQ2_Cap60A9tfxDmmaXInsz_xFE42VtwVIQyUL-Hs/export?format=csv&gid=0"  # GID for Watchlist sheet
+GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1XipQ2_Cap60A9tfxDmmaXInsz_xFE42VtwVIQyUL-Hs/edit?usp=sharing"  # GID for Watchlist sheet
 
 # === Scoring Weights ===
 SCORING_WEIGHTS = {
