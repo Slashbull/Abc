@@ -3,11 +3,11 @@
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env (if available)
+# Load .env variables if present
 load_dotenv()
 
 # =============================================================================
-# 🔐 Authentication (optional login credentials)
+# 🔐 Authentication (Optional: Only if you want app login)
 # =============================================================================
 USERNAME = os.getenv("APP_USERNAME", "admin")
 PASSWORD = os.getenv("APP_PASSWORD", "admin123")
@@ -20,7 +20,7 @@ GOOGLE_SHEET_EDITABLE_LINK = os.getenv(
     "https://docs.google.com/spreadsheets/d/1XipQ2_Cap60A9tfxDmmaXInsz_xFE42VtwVIQyUL-Hs/edit?usp=sharing"
 ).strip()
 
-# Convert to direct CSV download link
+# Convert to exportable CSV URL for direct loading
 if "/edit" in GOOGLE_SHEET_EDITABLE_LINK:
     GOOGLE_SHEET_CSV_URL = GOOGLE_SHEET_EDITABLE_LINK.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv")
 else:
@@ -29,7 +29,7 @@ else:
 DEFAULT_SHEET_NAME = os.getenv("DEFAULT_SHEET_NAME", "Watchlist")
 
 # =============================================================================
-# 🧠 Scoring Logic Config
+# 🧠 Scoring Logic Configuration (weights for the MANTRA system)
 # =============================================================================
 SCORING_WEIGHTS = {
     "EPS_Change": 20,
@@ -49,7 +49,7 @@ TAG_WATCH = "🟡 WATCH"
 TAG_AVOID = "🔴 AVOID"
 
 # =============================================================================
-# ⚙️ App Settings
+# ⚙️ App Info
 # =============================================================================
 APP_TITLE = "📈 M.A.N.T.R.A. – Stock Intelligence Dashboard"
 APP_VERSION = "v1.0.0"
@@ -62,13 +62,15 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")  # DEBUG, INFO, WARNING, ERROR
 CACHE_MAX_ENTRIES = int(os.getenv("CACHE_MAX_ENTRIES", 100))
 
 # =============================================================================
-# 🏷️ Column Constants (used for logic, filtering, tags, etc.)
+# 🏷️ Column Constants (used across all modules for reliability)
 # =============================================================================
-COL_EPS_CHANGE = "EPS_Change"
+COL_TICKER = "Ticker"
+COL_NAME = "Name"
 COL_PE = "PE"
 COL_PRICE = "Current_Price"
 COL_200DMA = "200_Day_Avg"
 COL_RVOL = "RVOL"
 COL_RETURN_1Y = "1_Year"
+COL_EPS_CHANGE = "EPS_Pct_Change"
 COL_SECTOR = "Sector"
 COL_TAG = "Tag"
