@@ -1,3 +1,70 @@
+M.A.N.T.R.A/
+
+├── ingest/                        # 1️⃣  I/O only
+│   ├── ingest.py                  #   • Pull Google-Sheet CSV → DataFrame
+│   └── config.py                  #   • Sheet IDs, URLs, env constants
+
+├── clean/                         # 2️⃣  Raw → tidy
+│   └── clean.py                   #   • Strip ₹/%, fix dtypes, canonical headers
+
+├── signals/                       # 3️⃣  Pure analytics (no I/O)
+│   ├── momentum.py                #   • Returns 1D … 1Y
+│   ├── value.py                   #   • PE, EPS-growth, 52-week discount
+│   ├── volume.py                  #   • RVOL & spike detection
+│   ├── timing.py                  #   • DMA crossovers, buy-zone maths
+│   ├── confirmation.py            #   • Momentum ✚ volume agreement
+│   └── smartscore.py              #   • Weighted 0-100 composite
+
+├── tagging/                       # 4️⃣  Decision layer
+│   └── tagger.py                  #   • BUY / WATCH / AVOID assignment
+
+├── features/                      # 5️⃣  Optional power add-ons
+│   ├── buy_zone_map.py            #   • Visual price-vs-DMA/52W mapping
+│   ├── eps_growth_screener.py     #   • High-EPS + low-PE finder
+│   ├── dma_crossover.py           #   • 20/50/200-DMA filters
+│   ├── volume_price_spike.py      #   • RVOL ✚ price-jump radar
+│   ├── sector_leaderboard.py      #   • Bull/Bear rotation, risk score
+│   └── discover_top10.py          #   • Top movers per Discover tier
+
+├── alerts/                        # 6️⃣  In-app notifications
+│   ├── alerts.py                  #   • Rule dispatcher → list[str]
+│   ├── top_picks.py               #   • Weekly Top-10 generator
+│   └── alert_ui.py                #   • Streamlit pop-up helpers
+
+├── dashboard/                     # 7️⃣  UI only (Streamlit)
+│   ├── app.py                     #   • Main entry-point
+│   ├── loader.py                  #   • Wrap ingest → clean for UI
+│   ├── sector_analysis.py         #   • Heatmap & rotation charts
+│   ├── filters.py                 #   • Sidebar widgets
+│   └── ui_utils.py                #   • Cards, colours, format helpers
+
+├── watchlist_builder/             # 8️⃣  Auto-list creator
+│   └── suggestor.py               #   • Build fresh watchlist from high scores
+
+├── snapshots/                     # Auto-generated artefacts (never imported)
+│   ├── weekly_top10.csv
+│   └── sector_snapshots/
+
+├── config.py                      # Global constants (already built)
+├── README.md                      # Quick-start + docs
+├── structure.txt                  # ← this file
+└── requirements.txt               # Dependencies: pandas, numpy, streamlit…
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 mantra_ai_dashboard/
 ├── app.py                # Main Streamlit app entrypoint (UI, user flow)
 ├── config.py             # All configuration, links, weights, constants
