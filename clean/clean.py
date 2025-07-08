@@ -1,9 +1,8 @@
 # clean/clean.py
-"""M.A.N.T.R.A. · CLEAN LAYER
+"""CLEAN MODULE
 
-Transforms raw CSV data (downloaded via *ingest/ingest.py*) into a tidy,
-analysis‑ready DataFrame.  This is the **only** place that mutates the data
-structure.  All downstream code assumes these canonical column names & dtypes.
+Transforms raw DataFrames into tidy, analysis-ready DataFrames with
+consistent snake_case columns and numeric types.
 """
 from __future__ import annotations
 
@@ -12,122 +11,84 @@ from typing import Final
 
 import pandas as pd
 
-__all__ = [
-    "clean_watchlist",
-    "clean_industry",
-]
+__all__ = ["clean_watchlist", "clean_industry"]
 
-# ---------------------------------------------------------------------------
-# 🔤 Column Normalisation
-# ---------------------------------------------------------------------------
+# Regex patterns
+_WHITESPACE_RE: Final[re.Pattern[str]] = re.compile(r"\s+")
+_CLEAN_REPLACEMENTS: Final[dict[str, str]] = {
+    r"[%]": "Pct",
+    r"[()\n]": "",
+    r"[↓↑]": "",
+    r"/": "_",
+}
 
-WHITESPACE_RE: Final[re.Pattern[str]] = re.compile(r"\s+")
-PERCENT_RE: Final[re.Pattern[str]] = re.compile(r"[%]$")
-ARROW_RE: Final[re.Pattern[str]] = re.compile(r"[▲▼]")
-RUPEE_RE: Final[re.Pattern[str]] = re.compile(r"₹")
-COMMA_RE: Final[re.Pattern[str]] = re.compile(r",")
-
-
-_NUMERIC_SUFFIXES: Final[list[str]] = [
-    "Current Price",
-    "52 Week LOW",
-    "52 Week HIGH",
-    "% From Low",
-    "% From High",
-    "20 Day Avg",
-    "50 Day Avg",
-    "200 Day Avg",
-    "1 Day Change",
-    "3 Days Returns",
-    "7 Days Returns",
-    "30 Days Returns",
-    "3 Months",
-    "6 Months",
-    "1 Year",
-    "3 Year",
-    "5 Year",
-    "Volume",
-    "7 Days Volume",
-    "30 Days Volume",
-    "3 Months Volume",
-    "1-day vs. 90-day",
-    "7-day vs. 90-day",
-    "30-day vs. 90-day",
-    "RVOL",
-    "Prev Close",
-    "PE",
-    "EPS (Current)",
-    "EPS (Last Qtr)",
-    "EPS (TTM)",
-    "EPS (% Change)",
+# Numeric columns to coerce (pre-snake-case)
+_NUMERIC_COLS_ORIG: Final[list[str]] = [
+    "Current Price", "1 Day Change", "52 Week LOW", "52 Week HIGH",
+    "% From Low", "% From High", "20 Day Avg", "50 Day Avg", "200 Day Avg",
+    "3 Days Returns", "7 Days Returns", "30 Days Returns", "3 Months",
+    "6 Months", "1 Year", "3 Year", "5 Year", "Volume", "7 Days Volume",
+    "30 Days Volume", "3 Months Volume", "1-day vs. 90-day",
+    "7-day vs. 90-day", "30-day vs. 90-day", "RVOL", "Prev Close",
+    "PE", "EPS (Current)", "EPS (Last Qtr)", "EPS (TTM)", "EPS (% Change)",
 ]
 
 
-def _snake_case(col: str) -> str:  # noqa: WPS110 (col ok)
-    """Convert *col* to snake_case safe for Python access."""
-    col = WHITESPACE_RE.sub("_", col.strip())
-    col = col.replace("/", "_").replace("%", "Pct")
-    col = col.replace("(", "").replace(")", "")
-    col = col.replace("↓", "").replace("↑", "")
-    return re.sub(r"__+", "_", col)
+def _snake_case(col: str) -> str:
+    """Convert string to snake_case"""
+    s = col.strip()
+    # Apply replacements
+    for pat, repl in _CLEAN_REPLACEMENTS.items():
+        s = re.sub(pat, repl, s)
+    # Normalize whitespace to underscore
+    s = _WHITESPACE_RE.sub("_", s)
+    # Lowercase
+    return s.lower()
 
 
-# ---------------------------------------------------------------------------
-# 🚿 Cleaning helpers
-# ---------------------------------------------------------------------------
-
-def _coerce_numeric(series: pd.Series) -> pd.Series:  # noqa: D401
-    """Strip ₹, arrows, commas, percent then convert to float."""
-    cleaned = (
-        series.astype(str)
-        .pipe(RUPEE_RE.sub, "")
-        .pipe(ARROW_RE.sub, "")
-        .pipe(COMMA_RE.sub, "")
-        .pipe(PERCENT_RE.sub, "")
-        .str.strip()
-        .replace({"": pd.NA, "-": pd.NA})
-    )
-    return pd.to_numeric(cleaned, errors="coerce")
+def _coerce_numeric(series: pd.Series) -> pd.Series:
+    """Strip symbols and convert to float."""
+    # Remove rupee, commas, percent signs, arrows
+    s = series.astype(str)
+    s = s.str.replace(r"₹", "", regex=False)
+    s = s.str.replace(r",", "", regex=False)
+    s = s.str.replace(r"%", "", regex=False)
+    s = s.str.replace(r"▲", "", regex=False)
+    s = s.str.replace(r"▼", "-", regex=False)
+    s = s.str.strip()
+    return pd.to_numeric(s, errors="coerce")
 
 
-# ---------------------------------------------------------------------------
-# 🧹 Public cleaners
-# ---------------------------------------------------------------------------
-
-def clean_watchlist(raw: pd.DataFrame) -> pd.DataFrame:  # noqa: WPS231 (acceptable length)
-    """Return a tidy Watchlist DataFrame ready for signal engines."""
+def clean_watchlist(raw: pd.DataFrame) -> pd.DataFrame:
+    """Clean raw watchlist DataFrame."""
     df = raw.copy()
-
-    # 1️⃣ Drop unnamed garbage columns
-    df = df.loc[:, ~df.columns.str.contains("^Unnamed")]
-
-    # 2️⃣ Standardise header names → snake_case
+    # Drop unnamed
+    df = df.loc[:, ~df.columns.str.contains(r"^Unnamed")]  # type: ignore
+    # Snake-case headers
     df.columns = [_snake_case(c) for c in df.columns]
-
-    # 3️⃣ Ensure ticker column exists + drop empties
+    # Rename ticker column if exists
     if "enter_ticker" in df.columns:
         df.rename(columns={"enter_ticker": "ticker"}, inplace=True)
+    # Drop rows missing ticker
     df.dropna(subset=["ticker"], inplace=True)
-
-    # 4️⃣ Numeric coercion for all numeric‑intended columns
-    for col in _NUMERIC_SUFFIXES:
-        snake = _snake_case(col)
-        if snake in df.columns:
-            df[snake] = _coerce_numeric(df[snake])
-
+    # Coerce numeric columns
+    for orig in _NUMERIC_COLS_ORIG:
+        col = _snake_case(orig)
+        if col in df.columns:
+            df[col] = _coerce_numeric(df[col])
     return df.reset_index(drop=True)
 
 
 def clean_industry(raw: pd.DataFrame) -> pd.DataFrame:
-    """Return a tidy Industry‑Analysis DataFrame."""
+    """Clean raw industry DataFrame."""
     df = raw.copy()
-    df = df.loc[:, ~df.columns.str.contains("^Unnamed")]
+    df = df.loc[:, ~df.columns.str.contains(r"^Unnamed")]  # type: ignore
     df.columns = [_snake_case(c) for c in df.columns]
-    df.dropna(subset=[df.columns[0]], inplace=True)  # keep rows with ticker/sector
-
-    # Coerce all return % columns to numeric
-    pct_cols = [c for c in df.columns if c.endswith("%") or "Pct" in c]
-    for col in pct_cols:
-        df[col] = _coerce_numeric(df[col])
-
+    # Drop blank rows
+    first_col = df.columns[0]
+    df.dropna(subset=[first_col], inplace=True)
+    # Coerce any column with pct or returning numeric
+    for col in df.columns:
+        if any(key in col for key in ["pct", "day", "year", "return"]):
+            df[col] = _coerce_numeric(df[col])
     return df.reset_index(drop=True)
